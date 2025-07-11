@@ -31,38 +31,36 @@
 #include "lib/sd_card/sd_audio.h"
 
 
-#define ADC_NUM 0
-#define ADC_PIN (26 + ADC_NUM)
-#define ADC_VREF 3.3
-#define ADC_RANGE (1 << 12)
-#define ADC_CONVERT (ADC_VREF / (ADC_RANGE - 1))
-#define SAMPLES 256                        // number of audio samples to take per FFT computation, must be power of 2
-#define SAMPLING_FREQUENCY 4096
+#define ADC_NUM 0                                   // Channel of ADC on Pico W
+#define ADC_PIN (26 + ADC_NUM)                      // Pin number for that ADC
+#define ADC_VREF 3.3                                // System voltage of Pico W
+#define ADC_RANGE (1 << 12)                         // 2^12 = 4096
+#define ADC_CONVERT (ADC_VREF / (ADC_RANGE - 1))    // 3.3 / 4095 = 0.000805861
+#define SAMPLES 256                                 // Number of audio samples to take per FFT computation, must be power of 2
+#define SAMPLING_FREQUENCY 4096                     // Samples per second
 
-#define MIC_ADC 0
-#define MIC_GPIO_PIN ADC_PIN
-#define TOLERANCE 3.0
+#define MIC_ADC 0                                   // ADC used for microphone
+#define MIC_GPIO_PIN ADC_PIN                        // Microphone uses ADC pin
 
-#define Yes_Button_PLAT 3 
-#define No_Button_PLAT 7
-#define Mic_LED_PLAT 9
+#define Yes_Button_PLAT 3                           // Yes button pin on the Prototype Platform (i.e. breadboard version)
+#define No_Button_PLAT 7                            // No button pin on the Prototype Platform (i.e. breadboard version)
+#define Mic_LED_PLAT 9                              // Power indicating LED pin on the Prototype Platform  (i.e. breadboard version)
 
-#define Yes_Button_PROTO 4 
-#define No_Button_PROTO 3
-#define Mic_LED_PROTO 5
+#define Yes_Button_PROTO 4                          // Yes button pin on the Prototype (i.e. finished version)
+#define No_Button_PROTO 3                           // No button pin on the Prototype (i.e. finished version)
+#define Mic_LED_PROTO 5                             // Power indicating LED pin on the Prototype (i.e. finished version)
 
-int8_t Yes_Button;
-int8_t No_Button;
-int8_t Mic_LED;
+#define USB_DETECT_PIN 28                           // High when Pico W is connnected to USB. Used to load firmware to Prototype.
 
-int buttonPressed=0;
+int8_t Yes_Button;                                  // Used to set Yes button pin based on which version is being used.
+int8_t No_Button;                                   // Used to set No button pin based on which version is being used.
+int8_t Mic_LED;                                     // Used to set Power indicating LED pin based on which version is being used.
 
-#define USB_DETECT_PIN 28
+int buttonPressed=0;                                // Records if a button has been pressed.
 
-uint16_t micSamplingPeriod;
-uint64_t lastSampleTime;
-float vReal[SAMPLES]; //create vector of size SAMPLES to hold real values
-double vImag[SAMPLES]; //create vector of size SAMPLES to hold imaginary values
+uint16_t micSamplingPeriod;                         // Used by both for sampling the microphone and by the yin pitch detection functions.
+float vReal[SAMPLES];                               // Create vector of size SAMPLES to hold real values
+double vImag[SAMPLES];                              // Create vector of size SAMPLES to hold imaginary values
 void sampleMic(void);
 bool isListening;
 uint adc_raw;
@@ -427,6 +425,8 @@ void PlayAllSine(void){
 
 
 void sampleMic(void){
+    uint64_t lastSampleTime;
+
     for(uint16_t i=0; i<SAMPLES; i++){
   
           lastSampleTime = time_us_64();
